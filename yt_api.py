@@ -66,24 +66,36 @@ def liveStreamingDetails(live_id,youtube_data):
     ).execute()
 
     live_dict_key = ["video_id", 
-                     "channel", "published_time", "title", "thumbnails",
-                     "current_viewers", "good_num", "bad_num"]
+                     "channel", "published_time", "title", "thumbnails","tags","category_id",
+                     "current_viewers", 
+                     "good_num", "bad_num"]
     live_dict_values = []
     for search_result in youtube_video.get("items", []):
         try:
-            video_id = search_result["id"] 
+            video_id = search_result["id"]
         
             channel = search_result["snippet"]["channelTitle"]
             published_time = search_result["snippet"]["publishedAt"]
             title = search_result["snippet"]["title"]
             thumbnails = search_result["snippet"]["thumbnails"]["default"]["url"]
+            try:
+                tags = search_result["snippet"]["tags"]
+            except :
+                tags = "-1"
+            
+            category_id = search_result["snippet"]["categoryId"]
         
             current_viewers = search_result["liveStreamingDetails"]["concurrentViewers"]
-            good_num = search_result["statistics"]["likeCount"]
-            bad_num = search_result["statistics"]["dislikeCount"]
+            try:
+                good_num = search_result["statistics"]["likeCount"]
+                bad_num = search_result["statistics"]["dislikeCount"]
+            except:
+                good_num = -1
+                bad_num = -1
             
-            livestream_array = [video_id,channel, published_time,title,thumbnails,current_viewers,good_num,bad_num]
+            livestream_array = [video_id,channel, published_time,title,thumbnails,tags,category_id,current_viewers,good_num,bad_num]
             live_dict_values.append(livestream_array)
+        
         except KeyError:
             print("KEYERROR : " ,video_id)
             pass
@@ -189,10 +201,11 @@ if __name__ == "__main__":
             print("Search time : " , now_date)
 
             for t in range(NUM):
-                #live_id,live_nexttoken = live_broadcast_search(now_date,live_nexttoken,youtube_data)
+                live_id,live_nexttoken = live_broadcast_search(now_date,live_nexttoken,youtube_data)
                 upcoming_id, upcoming_nexttoken = upcoming_broadcast_search(now_date,upcoming_nexttoken,youtube_data)
                 #サンプルデータ
-                live_id = ["5qap5aO4i9A" ,"36YnV9STBqc"]
+                #live_id = ["HBH9ZeUy2Jk"]
+                #live_id = ["5qap5aO4i9A" ,"36YnV9STBqc","HBH9ZeUy2Jk"]
                 #upcoming_id = ["ZWIdxb_s1-I"]
 
                 print ("total live = ",len(live_id) ,"\ntotal upcoming =" ,len(upcoming_id))
@@ -204,7 +217,7 @@ if __name__ == "__main__":
                 batch_insert(db,"upcoming", upcoming_dict_key, upcomming_dict_values)                
 
                 #確認用csv書き込み
-                with open("ytapi11.csv","a",encoding="utf-8-sig") as f:
+                with open("ytapi14.csv","a",encoding="utf-8-sig") as f:
                     writer = csv.writer(f,lineterminator = '\n')
                     writer.writerows(live_dict_values)
                     writer.writerows(upcomming_dict_values)               
